@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://youraccount.github.io/flet-carousel-slider/</loc>
+         <loc>https://skeletorflet.github.io/flet-carousel-slider/</loc>
          <lastmod>2025-08-09</lastmod>
     </url>
     <url>
-         <loc>https://youraccount.github.io/flet-carousel-slider/FletCarouselSlider/</loc>
+         <loc>https://skeletorflet.github.io/flet-carousel-slider/FletCarouselSlider/</loc>
          <lastmod>2025-08-09</lastmod>
     </url>
     <url>
-         <loc>https://youraccount.github.io/flet-carousel-slider/examples/</loc>
+         <loc>https://skeletorflet.github.io/flet-carousel-slider/examples/</loc>
          <lastmod>2025-08-09</lastmod>
     </url>
 </urlset>
