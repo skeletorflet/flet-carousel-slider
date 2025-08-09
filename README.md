@@ -164,24 +164,6 @@ Run the interactive demo to experiment with all parameters:
 python examples/flet_carousel_slider_example/src/main.py
 ```
 
-## 🔄 Migration Guide
-
-### From Dict-style to Attribute-style Events
-
-**Old API:**
-```python
-def on_page_changed(e):
-    data = e.data
-    index = data['index']
-    reason = data['reason']
-```
-
-**New API (Recommended):**
-```python
-def on_page_changed(data):
-    index = data.index      # ✨ Attribute access
-    reason = data.reason    # ✨ Cleaner syntax
-```
 
 ## 📄 License
 
