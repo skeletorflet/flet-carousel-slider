@@ -1,0 +1,50 @@
+Metadata-Version: 2.4
+Name: flet-carousel-slider
+Version: 0.1.0
+Summary: FletCarouselSlider control for Flet
+Author-email: Flet contributors <you@example.com>
+Project-URL: Homepage, https://mydomain.dev
+Project-URL: Documentation, https://github.com/MyGithubAccount/flet-carousel-slider
+Project-URL: Repository, https://github.com/MyGithubAccount/flet-carousel-slider
+Project-URL: Issues, https://github.com/MyGithubAccount/flet-carousel-slider/issues
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: flet>=0.28.3
+
+# flet-carousel-slider
+FletCarouselSlider control for Flet
+
+## Installation
+
+Add dependency to `pyproject.toml` of your Flet app:
+
+* **Git dependency**
+
+Link to git repository:
+
+```
+dependencies = [
+  "flet-carousel-slider @ git+https://github.com/MyGithubAccount/flet-carousel-slider",
+  "flet>=0.28.3",
+]
+```
+
+* **PyPi dependency**  
+
+If the package is published on pypi.org:
+
+```
+dependencies = [
+  "flet-carousel-slider",
+  "flet>=0.28.3",
+]
+```
+
+Build your app:
+```
+flet build macos -v
+```
+
+## Documentation
+
+[Link to documentation](https://MyGithubAccount.github.io/flet-carousel-slider/)

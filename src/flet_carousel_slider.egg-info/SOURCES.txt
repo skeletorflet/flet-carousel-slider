@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+src/flet_carousel_slider/__init__.py
+src/flet_carousel_slider/flet_carousel_slider.py
+src/flet_carousel_slider.egg-info/PKG-INFO
+src/flet_carousel_slider.egg-info/SOURCES.txt
+src/flet_carousel_slider.egg-info/dependency_links.txt
+src/flet_carousel_slider.egg-info/requires.txt
+src/flet_carousel_slider.egg-info/top_level.txt
+src/flutter/flet_carousel_slider/CHANGELOG.md
+src/flutter/flet_carousel_slider/LICENSE
+src/flutter/flet_carousel_slider/README.md
+src/flutter/flet_carousel_slider/pubspec.lock
+src/flutter/flet_carousel_slider/pubspec.yaml
+src/flutter/flet_carousel_slider/lib/flet_carousel_slider.dart
+src/flutter/flet_carousel_slider/lib/src/create_control.dart
+src/flutter/flet_carousel_slider/lib/src/flet_carousel_slider.dart
