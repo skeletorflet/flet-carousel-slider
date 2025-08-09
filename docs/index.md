@@ -47,9 +47,9 @@ ft.app(main)
 ### Main Classes
 
 - **[FletCarouselSlider](FletCarouselSlider.md)** - The main carousel control
-- **[CenterPageEnlargeStrategy](FletCarouselSlider.md#centerpageenlargestrategy)** - Enlarge strategies enum
-- **[ScrollDirection](FletCarouselSlider.md#scrolldirection)** - Scroll direction enum
-- **[EventData](FletCarouselSlider.md#eventdata)** - Event data object
+- **[CenterPageEnlargeStrategy](FletCarouselSlider.md)** - Enlarge strategies enum
+- **[ScrollDirection](FletCarouselSlider.md)** - Scroll direction enum
+- **[EventData](FletCarouselSlider.md)** - Event data object
 
 ## 🎯 Key Features
 

@@ -22,9 +22,10 @@ class EventData:
     Attributes:
         Dynamic attributes are created based on the input data dictionary.
         Common attributes include:
-        - index (int): Page index for page change events
-        - reason (str): Reason for page change events
-        - position (float): Scroll position for scroll events
+
+        index (int): Page index for page change events
+        reason (str): Reason for page change events
+        position (float): Scroll position for scroll events
 
     Examples:
         ```python
