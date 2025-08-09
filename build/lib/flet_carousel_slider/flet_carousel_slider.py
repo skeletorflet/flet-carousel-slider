@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, List
 import json
 import uuid
 
@@ -7,31 +7,66 @@ from flet.core.constrained_control import ConstrainedControl
 from flet.core.control import OptionalNumber, Control
 from flet.core.types import (
     OptionalControlEventCallable,
+    ClipBehavior,
 )
-from flet.core.animation import AnimationCurve
+from flet.core.animation import AnimationValue
+
+
+class EventData:
+    """
+    Event data class that allows both dict-style and attribute-style access.
+    """
+
+    def __init__(self, data_dict):
+        self._data = data_dict
+        # Set attributes dynamically from dict
+        for key, value in data_dict.items():
+            setattr(self, key, value)
+
+    def __getitem__(self, key):
+        """Allow dict-style access for backward compatibility"""
+        return self._data[key]
+
+    def __contains__(self, key):
+        """Support 'in' operator"""
+        return key in self._data
+
+    def get(self, key, default=None):
+        """Support dict.get() method"""
+        return self._data.get(key, default)
+
+    def __repr__(self):
+        return f"EventData({self._data})"
+
 
 class CarouselPageChangedReason(Enum):
     """
     Enum for carousel page changed reasons.
     """
+
     CONTROLLER = "controller"
     MANUAL = "manual"
     TIMED = "timed"
+
 
 class CenterPageEnlargeStrategy(Enum):
     """
     Enum for center page enlarge strategy.
     """
+
     SCALE = "scale"
     HEIGHT = "height"
     ZOOM = "zoom"
+
 
 class ScrollDirection(Enum):
     """
     Enum for scroll direction.
     """
+
     HORIZONTAL = "horizontal"
     VERTICAL = "vertical"
+
 
 class FletCarouselSlider(ConstrainedControl):
     """
@@ -66,7 +101,7 @@ class FletCarouselSlider(ConstrainedControl):
         #
         items: Optional[List[Control]] = None,
         height: OptionalNumber = None,
-        aspect_ratio: OptionalNumber = 16/9,
+        aspect_ratio: OptionalNumber = 16 / 9,
         viewport_fraction: OptionalNumber = 0.8,
         initial_page: Optional[int] = 0,
         enable_infinite_scroll: Optional[bool] = True,
@@ -74,11 +109,12 @@ class FletCarouselSlider(ConstrainedControl):
         reverse: Optional[bool] = False,
         auto_play: Optional[bool] = False,
         auto_play_interval: Optional[int] = 4000,  # milliseconds
-        auto_play_animation_duration: Optional[int] = 800,  # milliseconds
-        auto_play_curve: Optional[str] = "fastOutSlowIn",
+        auto_play_animation: Optional[AnimationValue] = None,
         enlarge_center_page: Optional[bool] = False,
         enlarge_factor: OptionalNumber = 0.3,
-        enlarge_strategy: Optional[CenterPageEnlargeStrategy] = CenterPageEnlargeStrategy.SCALE,
+        enlarge_strategy: Optional[
+            CenterPageEnlargeStrategy
+        ] = CenterPageEnlargeStrategy.SCALE,
         page_snapping: Optional[bool] = True,
         scroll_direction: Optional[ScrollDirection] = ScrollDirection.HORIZONTAL,
         pause_auto_play_on_touch: Optional[bool] = True,
@@ -86,6 +122,7 @@ class FletCarouselSlider(ConstrainedControl):
         pause_auto_play_in_finite_scroll: Optional[bool] = False,
         disable_center: Optional[bool] = False,
         pad_ends: Optional[bool] = True,
+        clip_behavior: Optional[ClipBehavior] = ClipBehavior.HARD_EDGE,
         enable_scroll_events: Optional[bool] = False,
         on_page_changed: OptionalControlEventCallable = None,
         on_scrolled: OptionalControlEventCallable = None,
@@ -112,8 +149,7 @@ class FletCarouselSlider(ConstrainedControl):
         self.reverse = reverse
         self.auto_play = auto_play
         self.auto_play_interval = auto_play_interval
-        self.auto_play_animation_duration = auto_play_animation_duration
-        self.auto_play_curve = auto_play_curve
+        self.auto_play_animation = auto_play_animation
         self.enlarge_center_page = enlarge_center_page
         self.enlarge_factor = enlarge_factor
         self.enlarge_strategy = enlarge_strategy
@@ -124,6 +160,7 @@ class FletCarouselSlider(ConstrainedControl):
         self.pause_auto_play_in_finite_scroll = pause_auto_play_in_finite_scroll
         self.disable_center = disable_center
         self.pad_ends = pad_ends
+        self.clip_behavior = clip_behavior
         self.enable_scroll_events = enable_scroll_events
         # Initialize handler variables
         self.__on_page_changed_handler = None
@@ -135,6 +172,10 @@ class FletCarouselSlider(ConstrainedControl):
         # Add internal event handlers for JSON decoding
         self._add_event_handler("page_changed", self._on_page_changed_internal)
         self._add_event_handler("scrolled", self._on_scrolled_internal)
+
+    def before_update(self):
+        super().before_update()
+        self._set_attr_json("autoPlayAnimation", self.__auto_play_animation)
 
     def _get_control_name(self):
         return "flet_carousel_slider"
@@ -273,31 +314,26 @@ class FletCarouselSlider(ConstrainedControl):
     def auto_play_interval(self, value: Optional[int]):
         self._set_attr("autoPlayInterval", value)
 
-    # auto_play_animation_duration property
+    # auto_play_animation property
     @property
-    def auto_play_animation_duration(self) -> Optional[int]:
+    def auto_play_animation(self) -> Optional[AnimationValue]:
         """
-        The animation duration between two transitioning pages while in auto playback.
-        Value in milliseconds. Defaults to 800ms.
-        """
-        return self._get_attr("autoPlayAnimationDuration")
+        The animation configuration for auto play transitions.
+        Can be:
+        - bool: True to enable with default settings, False to disable
+        - int: Duration in milliseconds (e.g., 800)
+        - Animation: Full animation object with duration and curve
 
-    @auto_play_animation_duration.setter
-    def auto_play_animation_duration(self, value: Optional[int]):
-        self._set_attr("autoPlayAnimationDuration", value)
-
-    # auto_play_curve property
-    @property
-    def auto_play_curve(self) -> Optional[str]:
+        Examples:
+        - auto_play_animation=True  # Default animation
+        - auto_play_animation=500  # 500ms duration with default curve
+        - auto_play_animation=ft.Animation(800, ft.AnimationCurve.EASE_IN_OUT)
         """
-        Determines the animation curve physics.
-        Common values: "linear", "ease", "easeIn", "easeOut", "easeInOut", "fastOutSlowIn", etc.
-        """
-        return self._get_attr("autoPlayCurve")
+        return self.__auto_play_animation
 
-    @auto_play_curve.setter
-    def auto_play_curve(self, value: Optional[str]):
-        self._set_attr("autoPlayCurve", value)
+    @auto_play_animation.setter
+    def auto_play_animation(self, value: Optional[AnimationValue]):
+        self.__auto_play_animation = value
 
     # enlarge_center_page property
     @property
@@ -425,6 +461,19 @@ class FletCarouselSlider(ConstrainedControl):
     def pad_ends(self, value: Optional[bool]):
         self._set_attr("padEnds", value)
 
+    # clip_behavior property
+    @property
+    def clip_behavior(self) -> Optional[ClipBehavior]:
+        """
+        The clip behavior for the carousel.
+        """
+        return self.__clip_behavior
+
+    @clip_behavior.setter
+    def clip_behavior(self, value: Optional[ClipBehavior]):
+        self.__clip_behavior = value
+        self._set_enum_attr("clipBehavior", value, ClipBehavior)
+
     # enable_scroll_events property
     @property
     def enable_scroll_events(self) -> Optional[bool]:
@@ -443,42 +492,51 @@ class FletCarouselSlider(ConstrainedControl):
         """Internal handler that decodes JSON and calls user handler."""
         if self.__on_page_changed_handler:
             try:
-                # Decode JSON data
-                data = json.loads(e.data) if isinstance(e.data, str) else e.data
-                # Create a new event object with decoded data
-                class EventWithData:
-                    def __init__(self, data):
-                        self.data = data
-
-                event = EventWithData(data)
-                self.__on_page_changed_handler(event)
+                # Decode JSON data and create EventData object
+                data_dict = json.loads(e.data) if isinstance(e.data, str) else e.data
+                event_data = EventData(data_dict)
+                # Pass EventData object that supports both data.attribute and data['key'] access
+                self.__on_page_changed_handler(event_data)
             except (json.JSONDecodeError, AttributeError):
-                # Fallback: pass original event if JSON decode fails
-                self.__on_page_changed_handler(e)
+                # Fallback: pass empty EventData if JSON decode fails
+                self.__on_page_changed_handler(EventData({}))
 
     def _on_scrolled_internal(self, e):
         """Internal handler that decodes JSON and calls user handler."""
         if self.__on_scrolled_handler:
             try:
-                # Decode JSON data
-                data = json.loads(e.data) if isinstance(e.data, str) else e.data
-                # Create a new event object with decoded data
-                class EventWithData:
-                    def __init__(self, data):
-                        self.data = data
-
-                event = EventWithData(data)
-                self.__on_scrolled_handler(event)
+                # Decode JSON data and create EventData object
+                data_dict = json.loads(e.data) if isinstance(e.data, str) else e.data
+                # Only call handler if position is not None (Flutter can send null)
+                if data_dict.get("position") is not None:
+                    event_data = EventData(data_dict)
+                    self.__on_scrolled_handler(event_data)
             except (json.JSONDecodeError, AttributeError):
-                # Fallback: pass original event if JSON decode fails
-                self.__on_scrolled_handler(e)
+                # Fallback: pass empty EventData if JSON decode fails
+                self.__on_scrolled_handler(EventData({}))
 
     # Event handlers
     @property
     def on_page_changed(self) -> OptionalControlEventCallable:
         """
         Called whenever the page in the center of the viewport changes.
-        Event data contains: {"index": int, "reason": str}
+
+        Args:
+            data (EventData): Event data object with attribute and dict-style access:
+                - data.index (int): The new page index
+                - data.reason (str): The reason for the change ("controller", "manual", "timed")
+
+        Example:
+            def on_page_changed(data):
+                # Attribute-style access (recommended)
+                print(f"Page changed to: {data.index}, reason: {data.reason}")
+
+                # Dict-style access (also supported for backward compatibility)
+                print(f"Page changed to: {data['index']}, reason: {data['reason']}")
+
+            carousel.on_page_changed = on_page_changed
+
+        Note: Data is automatically parsed from JSON string sent by Dart.
         """
         return self.__on_page_changed_handler
 
@@ -490,13 +548,28 @@ class FletCarouselSlider(ConstrainedControl):
     def on_scrolled(self) -> OptionalControlEventCallable:
         """
         Called whenever the carousel is scrolled (only if enable_scroll_events=True).
-        Event data contains:
-        {
-            "offset": float,        # Normalized offset (0.0 to item_count)
-            "raw_offset": float,    # Raw offset from Flutter
-            "current_page": int     # Current page index
-        }
-        Note: Events are throttled to max 10 per second to avoid spam.
+
+        Args:
+            data (EventData): Event data object with attribute and dict-style access:
+                - data.position (float): Raw position value from carousel_slider package (unformatted)
+
+        Example:
+            def on_scrolled(data):
+                # Attribute-style access (recommended)
+                position = data.position  # Raw float value as sent by Flutter
+                print(f"Scrolled to position: {position}")
+
+                # Dict-style access (also supported for backward compatibility)
+                position = data['position']
+                print(f"Scrolled to position: {position}")
+
+            carousel.on_scrolled = on_scrolled
+
+        Note:
+        - Data is automatically parsed from JSON string sent by Dart
+        - Position value is the raw float from Flutter carousel_slider package
+        - No formatting is applied to preserve original precision
+        - Handler is only called when position is not null (Flutter may send null values)
         """
         return self.__on_scrolled_handler
 
@@ -515,44 +588,78 @@ class FletCarouselSlider(ConstrainedControl):
         #         self.update()
 
     # Controller methods
-    def next_page(self, duration: Optional[int] = 300, curve: Union[AnimationCurve, str, None] = AnimationCurve.LINEAR):
+    def next_page(self, animation: Optional[AnimationValue] = None):
         """
         Animate to the next page.
 
         Args:
-            duration: Animation duration in milliseconds (default: 300)
-            curve: Animation curve (AnimationCurve enum or string, default: AnimationCurve.LINEAR)
-        """
-        curve_value = curve
-        if isinstance(curve, AnimationCurve):
-            curve_value = curve.value
-        elif curve is None:
-            curve_value = AnimationCurve.LINEAR.value
+            animation: Animation configuration. Can be:
+                - None: Use default animation (300ms, linear)
+                - bool: True for default, False for no animation
+                - int: Duration in milliseconds with default curve
+                - Animation: Full animation object with duration and curve
 
-        args = {
-            "duration": str(duration or 300),
-            "curve": curve_value
-        }
+        Examples:
+            carousel.next_page()  # Default animation
+            carousel.next_page(500)  # 500ms with default curve
+            carousel.next_page(ft.Animation(800, ft.AnimationCurve.EASE_IN_OUT))
+        """
+        # Use Flet's standard animation serialization
+        duration = 300
+        curve = "linear"
+
+        if animation is None:
+            pass  # Use defaults
+        elif isinstance(animation, bool):
+            if not animation:
+                duration = 0  # No animation
+        elif isinstance(animation, int):
+            duration = animation
+        elif hasattr(animation, "duration") and hasattr(animation, "curve"):
+            duration = animation.duration or 300
+            if hasattr(animation.curve, "value"):
+                curve = animation.curve.value
+            elif animation.curve:
+                curve = str(animation.curve)
+
+        args = {"duration": str(duration), "curve": curve}
         return self.invoke_method("next_page", args, wait_for_result=False)
 
-    def previous_page(self, duration: Optional[int] = 300, curve: Union[AnimationCurve, str, None] = AnimationCurve.LINEAR):
+    def previous_page(self, animation: Optional[AnimationValue] = None):
         """
         Animate to the previous page.
 
         Args:
-            duration: Animation duration in milliseconds (default: 300)
-            curve: Animation curve (AnimationCurve enum or string, default: AnimationCurve.LINEAR)
-        """
-        curve_value = curve
-        if isinstance(curve, AnimationCurve):
-            curve_value = curve.value
-        elif curve is None:
-            curve_value = AnimationCurve.LINEAR.value
+            animation: Animation configuration. Can be:
+                - None: Use default animation (300ms, linear)
+                - bool: True for default, False for no animation
+                - int: Duration in milliseconds with default curve
+                - Animation: Full animation object with duration and curve
 
-        args = {
-            "duration": str(duration or 300),
-            "curve": curve_value
-        }
+        Examples:
+            carousel.previous_page()  # Default animation
+            carousel.previous_page(500)  # 500ms with default curve
+            carousel.previous_page(ft.Animation(800, ft.AnimationCurve.EASE_IN_OUT))
+        """
+        # Use Flet's standard animation serialization
+        duration = 300
+        curve = "linear"
+
+        if animation is None:
+            pass  # Use defaults
+        elif isinstance(animation, bool):
+            if not animation:
+                duration = 0  # No animation
+        elif isinstance(animation, int):
+            duration = animation
+        elif hasattr(animation, "duration") and hasattr(animation, "curve"):
+            duration = animation.duration or 300
+            if hasattr(animation.curve, "value"):
+                curve = animation.curve.value
+            elif animation.curve:
+                curve = str(animation.curve)
+
+        args = {"duration": str(duration), "curve": curve}
         return self.invoke_method("previous_page", args, wait_for_result=False)
 
     def jump_to_page(self, page: int):
@@ -565,26 +672,42 @@ class FletCarouselSlider(ConstrainedControl):
         args = {"page": str(page)}
         return self.invoke_method("jump_to_page", args, wait_for_result=False)
 
-    def animate_to_page(self, page: int, duration: Optional[int] = 300, curve: Union[AnimationCurve, str, None] = AnimationCurve.LINEAR):
+    def animate_to_page(self, page: int, animation: Optional[AnimationValue] = None):
         """
         Animate to the given page.
 
         Args:
             page: The page index to animate to
-            duration: Animation duration in milliseconds (default: 300)
-            curve: Animation curve (AnimationCurve enum or string, default: AnimationCurve.LINEAR)
-        """
-        curve_value = curve
-        if isinstance(curve, AnimationCurve):
-            curve_value = curve.value
-        elif curve is None:
-            curve_value = AnimationCurve.LINEAR.value
+            animation: Animation configuration. Can be:
+                - None: Use default animation (300ms, linear)
+                - bool: True for default, False for no animation
+                - int: Duration in milliseconds with default curve
+                - Animation: Full animation object with duration and curve
 
-        args = {
-            "page": str(page),
-            "duration": str(duration or 300),
-            "curve": curve_value
-        }
+        Examples:
+            carousel.animate_to_page(2)  # Default animation
+            carousel.animate_to_page(2, 500)  # 500ms with default curve
+            carousel.animate_to_page(2, ft.Animation(800, ft.AnimationCurve.EASE_IN_OUT))
+        """
+        # Use Flet's standard animation serialization
+        duration = 300
+        curve = "linear"
+
+        if animation is None:
+            pass  # Use defaults
+        elif isinstance(animation, bool):
+            if not animation:
+                duration = 0  # No animation
+        elif isinstance(animation, int):
+            duration = animation
+        elif hasattr(animation, "duration") and hasattr(animation, "curve"):
+            duration = animation.duration or 300
+            if hasattr(animation.curve, "value"):
+                curve = animation.curve.value
+            elif animation.curve:
+                curve = str(animation.curve)
+
+        args = {"page": str(page), "duration": str(duration), "curve": curve}
         return self.invoke_method("animate_to_page", args, wait_for_result=False)
 
     def get_current_page(self):

@@ -10,6 +10,7 @@ src/flet_carousel_slider.egg-info/top_level.txt
 src/flutter/flet_carousel_slider/CHANGELOG.md
 src/flutter/flet_carousel_slider/LICENSE
 src/flutter/flet_carousel_slider/README.md
+src/flutter/flet_carousel_slider/devtools_options.yaml
 src/flutter/flet_carousel_slider/pubspec.lock
 src/flutter/flet_carousel_slider/pubspec.yaml
 src/flutter/flet_carousel_slider/lib/flet_carousel_slider.dart

@@ -13,9 +13,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://mydomain.dev"
-Documentation = "https://github.com/MyGithubAccount/flet-carousel-slider"
-Repository = "https://github.com/MyGithubAccount/flet-carousel-slider"
-Issues = "https://github.com/MyGithubAccount/flet-carousel-slider/issues"
+Documentation = "https://github.com/skeletorflet/flet-carousel-slider"
+Repository = "https://github.com/skeletorflet/flet-carousel-slider"
+Issues = "https://github.com/skeletorflet/flet-carousel-slider/issues"
 
 [tool.setuptools.package-data]
 "flutter.flet_carousel_slider" = ["**/*"]

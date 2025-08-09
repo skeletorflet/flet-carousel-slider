@@ -151,32 +151,10 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
   }
 
   void _onScrolled(double? position) {
-    if (position == null) return;
-
-    // Normalize the offset to be more user-friendly
-    // CarouselSlider internally uses large numbers, let's make it relative to current page
-    final itemCount = widget.children
-        .where((c) => c.name?.startsWith("item_") == true && c.isVisible)
-        .length;
-    double normalizedOffset = _currentPage.toDouble();
-
-    if (itemCount > 0) {
-      // Calculate fractional part based on position relative to a reasonable base
-      double fractionalPart =
-          (position % 100) / 100; // Use mod 100 to get a 0-1 range
-      normalizedOffset = _currentPage + fractionalPart;
-
-      // Keep it within bounds
-      if (normalizedOffset < 0) normalizedOffset = 0;
-      if (normalizedOffset >= itemCount)
-        normalizedOffset = itemCount - 1 + fractionalPart;
-    }
-
+    // Pass the raw position from the carousel package without any formatting
+    // This matches the native Flutter carousel_slider package behavior
     final eventData = {
-      "offset": double.parse(
-          normalizedOffset.toStringAsFixed(2)), // Round to 2 decimals
-      "current_page": _currentPage,
-      "raw_offset": position, // Keep raw for debugging if needed
+      "position": position, // Can be null, will be handled in JSON
     };
 
     widget.backend.triggerControlEvent(
@@ -195,7 +173,6 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
     bool disabled = widget.control.isDisabled || widget.parentDisabled;
     bool? adaptive =
         widget.control.attrBool("adaptive") ?? widget.parentAdaptive;
-
     // Build carousel items
     List<Widget> carouselItems = itemControls.map((itemControl) {
       return createControl(
@@ -236,11 +213,13 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
     final bool autoPlay = _autoPlay;
     final int autoPlayInterval =
         widget.control.attrInt("autoPlayInterval", 4000) ?? 4000;
+    // Parse auto play animation using Flet's native parseAnimation
+    final autoPlayAnimation =
+        parseAnimation(widget.control, "autoPlayAnimation");
     final int autoPlayAnimationDuration =
-        widget.control.attrInt("autoPlayAnimationDuration", 800) ?? 800;
-    final String autoPlayCurve =
-        widget.control.attrString("autoPlayCurve", "fastOutSlowIn") ??
-            "fastOutSlowIn";
+        autoPlayAnimation?.duration?.inMilliseconds ?? 800;
+    final Curve autoPlayCurveObj =
+        autoPlayAnimation?.curve ?? Curves.fastOutSlowIn;
     final bool enlargeCenterPage =
         widget.control.attrBool("enlargeCenterPage", false) ?? false;
     final double enlargeFactor =
@@ -261,6 +240,8 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
     final bool disableCenter =
         widget.control.attrBool("disableCenter", false) ?? false;
     final bool padEnds = widget.control.attrBool("padEnds", true) ?? true;
+    final String clipBehavior =
+        widget.control.attrString("clipBehavior", "hardEdge") ?? "hardEdge";
 
     // Check if user wants scroll events (to avoid spam)
     final bool enableScrollEvents =
@@ -286,7 +267,7 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
       autoPlayInterval: Duration(milliseconds: autoPlayInterval),
       autoPlayAnimationDuration:
           Duration(milliseconds: autoPlayAnimationDuration),
-      autoPlayCurve: parseCurve(autoPlayCurve, Curves.fastOutSlowIn)!,
+      autoPlayCurve: autoPlayCurveObj,
       enlargeCenterPage: enlargeCenterPage,
       enlargeFactor: enlargeFactor,
       enlargeStrategy: _getEnlargeStrategy(enlargeStrategy),
@@ -298,6 +279,7 @@ class _FletCarouselSliderControlState extends State<FletCarouselSliderControl> {
       pauseAutoPlayInFiniteScroll: pauseAutoPlayInFiniteScroll,
       disableCenter: disableCenter,
       padEnds: padEnds,
+      clipBehavior: parseClip(clipBehavior, Clip.hardEdge)!,
       onPageChanged: _onPageChanged,
       onScrolled: enableScrollEvents ? _onScrolled : null,
     );
